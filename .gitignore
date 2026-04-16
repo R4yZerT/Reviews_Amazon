@@ -1,0 +1,5 @@
+venv/
+__pycache__/
+*.crc
+amazon_reviews_json/
+.DS_Store
