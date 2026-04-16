@@ -37,12 +37,14 @@ df_raw.write.mode("overwrite").json("amazon_reviews_json")
 df = spark.read.json("amazon_reviews_json") \
     .withColumnRenamed("reviews.text", "review_text") \
     .withColumnRenamed("reviews.rating", "rating") \
-    .withColumnRenamed("reviews.title", "review_title")
+    .withColumnRenamed("reviews.title", "review_title") \
+    .withColumnRenamed("name", "producto_nombre") 
 
 # Ahora las variables de columnas son simples y sin comillas raras
 TEXT_COL = "review_text"
 RATING_COL = "rating"
 ID_COL = "asins"
+PRODUCT_NAME_COL = "producto_nombre"
 
 print("Columnas listas para procesar ✓")
 
@@ -105,4 +107,4 @@ df.withColumn("rating_num", expr(f"try_cast({RATING_COL} AS double)")) \
 
 # 3. Productos con más reseñas
 print("\n--- Productos con mayor volumen de interacción ---")
-df.groupBy(ID_COL).count().orderBy(desc("count")).show(10)
+df.groupBy(PRODUCT_NAME_COL).count().orderBy(desc("count")).show(10)
