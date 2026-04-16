@@ -79,17 +79,29 @@ for n_particiones in [2, 4, 8, 16]:
     print(f"  Particiones: {n_particiones:>2} | Tiempo: {tiempo:.2f}s")
 
 # 6. CONSULTAS DISTRIBUIDAS
-print("\n[5] Consultas distribuidas...")
+print("\n[5] Consultas distribuidas con DataFrame API...")
 
-print("\nPromedio de rating general:")
-df.withColumn("rating_num", col(RATING_COL).cast("double")) \
-  .filter(col("rating_num").isNotNull()) \
-  .select(avg(col("rating_num")).alias("rating_promedio")).show()
+# 1. Estadísticas descriptivas de los ratings
+print("\n--- Análisis Estadístico de Ratings ---")
+df.select(col(RATING_COL).cast("double")).describe().show()
 
-print("\nTop 5 reseñas más largas:")
-df.withColumn("largo", length(col(TEXT_COL))) \
-  .select(ID_COL, "largo") \
-  .orderBy(desc("largo")).show(5)
+# 2. Top 10 Marcas con mejores reseñas (promedio)
+print("\n--- Top 10 Marcas con mejor calificación promedio ---")
+df.groupBy("brand") \
+    .agg(
+        avg(col(RATING_COL)).alias("promedio"),
+        count("*").alias("total_resenas")
+    ) \
+    .filter(col("total_resenas") > 5) \
+    .orderBy(desc("promedio")) \
+    .show(10)
 
-spark.stop()
-print("\n✅ Ejercicio 2 completado con éxito.")
+# 3. Análisis de sentimientos básico (por palabras clave)
+print("\n--- Análisis de palabras clave en reseñas (Distribución) ---")
+df.withColumn("es_recomendado", 
+    col(TEXT_COL).contains("good") | col(TEXT_COL).contains("great") | col(TEXT_COL).contains("excellent")
+).groupBy("es_recomendado").count().show()
+
+# 4. Reseñas por año/mes (Si la columna dateAdded es válida)
+print("\n--- Volumen de reseñas por fecha de actualización ---")
+df.groupBy("dateUpdated").count().orderBy(desc("count")).show(5)
